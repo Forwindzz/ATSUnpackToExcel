@@ -1,0 +1,48 @@
+[
+    {
+        "generation":"Extra Glade - Moorlands Dangerous.asset",
+        "biomeNames":[
+            "Moorlands.asset",
+        ]
+    },
+    {
+        "generation":"Extra Glade - Moorlands Forbidden.asset",
+        "biomeNames":[
+            "Moorlands.asset",
+        ]
+    },
+    {
+        "generation":"Extra Glade - Moorlands Normal.asset",
+        "biomeNames":[
+            "Moorlands.asset",
+        ]
+    },
+    {
+        "generation":"Extra Glade - Seal.asset",
+        "biomeNames":[
+            "Sealed Biome.asset",
+        ]
+    },
+    {
+        "generation":"ModifierEffect_RuinedSettlement_Dangerous.asset",
+        "biomeNames":[
+            "The Marshlands.asset",
+            //"Tutorial IV.asset",
+            "Royal Woodlands.asset",
+            "Moorlands.asset",
+            "Cursed Royal Woodlands.asset",
+            "Coral Forest.asset",
+        ]
+    },
+    {
+        "generation":"ModifierEffect_RuinedSettlement_Forbidden.asset",
+        "biomeNames":[
+            "The Marshlands.asset",
+            //"Tutorial IV.asset",
+            "Royal Woodlands.asset",
+            "Moorlands.asset",
+            "Cursed Royal Woodlands.asset",
+            "Coral Forest.asset",
+        ]
+    },
+]

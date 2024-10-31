@@ -1,0 +1,14 @@
+# python 
+/**/__pycache__/**/*.*
+
+# input
+all_2/*
+
+# output
+uuid_mapping.json
+uuid_path_mapping.json
+text.txt
+text.txt_.txt
+vis_output/**/*.*
+output/**/*.*
+filename_mapping.json
