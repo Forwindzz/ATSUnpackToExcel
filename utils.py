@@ -32,6 +32,12 @@ def removeUnityInfo(obj):
     safeDel(obj,"m_PrefabAsset")
     return obj
 
+langSettings = loadJson("settings/lang.json")
+def getLangSettings():
+    return langSettings
+
+def getLangCode():
+    return langSettings["use_language"]
 
 def recursiveRemoveFileID0(obj):
     if isinstance(obj,dict):

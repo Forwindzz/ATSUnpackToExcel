@@ -34,5 +34,5 @@ for k,v in globalGather.items():
             chances.append({"amount":amount,"deposit":target})
         depositsGather[lv]=chances
     processedGather[k]=depositsGather
-with open("output/deposites_gen.json","w",encoding="utf-8") as f:
+with open("output/deposits_gen.json","w",encoding="utf-8") as f:
     json.dump(processedGather,f,indent=4)

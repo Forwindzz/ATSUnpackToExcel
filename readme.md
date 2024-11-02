@@ -1,26 +1,58 @@
 
 # Unpack Analysis scripts
 
-This scripts only used for unpack and export ATS Data
-Currently do not support English, only support Chinese, but you can still use it. I will add English version if anyone want this.
-
-分析脚本，会生成表格，暂时不支持英语
-
-代码很乱，能跑就行的那种
-
 Support ATS 1.4 only
+只支持1.4版本
 
-# 环境要求
+Analyze and export json data and excel readable sheet
+分析并导出json和表格数据
+
+# Environment require 
 
 - Python 3
 - openpyxl, json, yaml
 
-你可以通过
+Use this command to install libraries:
 ```shell
 pip install openpyxl json yaml
 ```
-来安装这些库
+
+# Build
+
+English Version:
+Create folders:`all_2` `output` `vis_output` in the root
+Use [AssetRipper](https://github.com/AssetRipper/AssetRipper), export game files to `all_2` folder
+Your `all_2` folder should only contain`AuxiliaryFiles` and `ExportedProject`folder
+
+open powershell/cmd/windows terminal and run this in the root：
+```bat
+./parse.bat
+```
+It will run many python scripts
+
+The final output is to `output` and `output_vis`
+- `output` packed data in json format
+- `output_vis` readable excel sheets
+- `uuid_mapping.json` `uuid_path_mapping.json` prefab's uuid mapping
+- `output/display_names.json` Localization file
+
+# Config file
+
+- `settings/lang.json` Change current Language
+- `add_translate.json` For translation
+- `test_average_settings.json5` Expectation calculation for glades
+- `translator_index.json5` name the spawn group 
+- `template_*.xlsx` the first page of the excel sheet, there are some descriptions here
+
+# Scipts
+
+- `gather_*.py` gather data and output it to `*.json`
+- `replace_text_uuid.py` replace `text.txt` uuid string with prefab filename for higher readability
+- `gen_sheet_glades.py` generate excel sheet，use the data in `output` and output to `output_vis`
+
 # 构建
+
+Chinese Version
 
 创建`all_2` `output` `vis_output`文件夹在仓库根目录中
 使用[AssetRipper](https://github.com/AssetRipper/AssetRipper)导出到`all_2`文件夹
@@ -40,14 +72,15 @@ pip install openpyxl json yaml
 
 # 配置文件
 
+- `settings/lang.json` 设置当前语言
 - `add_translate.json` 额外语言表，能凑合翻译就行
 - `test_average_settings.json5` 配置期望计算，会对一些特殊空地组进行额外计算
 - `translator_index.json5` 给空地中不同组别的生成配置命名
-- `*.xlsx` 这个是表格的第一页，我通常会写一些说明在里面
+- `template_*.xlsx` 这个是表格的第一页，我通常会写一些说明在里面
 
 # 脚本
 
 - `gather_*.py` 用来收集特定类型的数据
 - `replace_text_uuid.py` 将`text.txt`文件中uuid全部换成prefab文件名，方便阅读
-- `gen_sheet_glades.py` 生成excel表格，会使用`output`文件夹下的数据
+- `gen_sheet_glades.py` 生成excel表格，会使用`output`文件夹下的数据，文件会最终输出到`output_vis`
 

@@ -50,20 +50,18 @@ data_bar_rule = DataBarRule(
     color="5b86ec"
 )
 
-# 创建绿色填充样式
 green_fill = PatternFill(start_color="b3ffca", end_color="b3ffca", fill_type="solid")
 
-# 创建红色填充样式
 red_fill = PatternFill(start_color="ff6b9a", end_color="ff6b9a", fill_type="solid")
 
 rule_tick = CellIsRule(operator='equal', formula=['"√"'], fill=green_fill)
 rule_cross = CellIsRule(operator='equal', formula=['"×"'], fill=red_fill)
 group_hint_words = {} 
-with open("translator_index.json5","r",encoding="utf-8") as f:
+with open(os.path.join("settings",utils.getLangCode(),"translator_index.json5"),"r",encoding="utf-8") as f:
     group_hint_words = json5.load(f)
 
 test_average_settings=[]
-with open("test_average_settings.json5","r",encoding="utf-8") as f:
+with open("settings/test_average_settings.json5","r",encoding="utf-8") as f:
     test_average_settings = json5.load(f)
 
 def get_trailing_number(s):
@@ -129,9 +127,14 @@ def getIndex(col:int,row:int):
 def getIndexWithCol(col:str,row:int):
     return "%s%d"%(col,row)
 
+sheetLanguage = utils.loadJson("settings/%s/sheet_language.json"%utils.getLangCode())
+def langStr(key:str):
+    return sheetLanguage[key]
+
 removeSpiteRegx = re.compile(r'\（<spritename="[^"]*">\）')
 removeColorRegx = re.compile(r'\<.*?\>')
 numRegx = re.compile(r'(?<!\S)(?<!\{)[-+]?\d+%?(?!\})(?!\S)')
+langNotRequireSpace = utils.getLangCode() in ["zh-CN","zh-TW"]
 def translateLang(s):
     global globalSortedDisplayName
     if s is None:
@@ -145,48 +148,50 @@ def translateLang(s):
     for k,v in globalSortedDisplayName:
         s = s.replace(k,v)
     s = removeColorRegx.sub('', s)
-    s = s.replace("_","").replace(" ","")
+    s = s.replace("_","")
+    if langNotRequireSpace:
+        s = s.replace(" ","")
     if len(nums)>0:
         s+=" ("+",".join(nums)+")"
     return s.replace(".asset","")
 
-def processBiomeModel(workbook:openpyxl.Workbook,biomeName, biomeInfo):
-    displayName = translateLang(biomeName)
-    # 概览部分：------------------------------------------------
-    ov_sheet = workbook.create_sheet(("生态概览_%s"%(displayName))[0:31])
-    ov_sheet.column_dimensions['A'].width = 20
-    ov_sheet["A1"] = "地图类型概览 - %s"%displayName
-    ov_sheet["C1"] = biomeName
-    ov_sheet["A2"] = "> 基础部分"
-
-    ov_sheet["A3"] = "地形视觉样式种类"
-    ov_sheet["B3"] = len(biomeInfo["maps"])
-
-    ov_sheet["A4"] = "允许使用邻近的负面正面修正" 
-    ov_sheet["B4"] = bool2str(biomeInfo["canHaveModifier"]) 
-    
-    ov_sheet["A5"] = "基础奖励倍率" 
-    ov_sheet["B5"] = biomeInfo["haseBaseReward"] 
-    ov_sheet["A6"] = "基础周边修正奖励倍率" 
-    ov_sheet["B6"] = biomeInfo["haseNearbyReward"] 
-    
-    ov_sheet["A8"] = "> 具体设定 " 
-    ov_sheet["A9"] = "这部分会有很多配置名出现 " 
-
-    ov_sheet["A10"] = "贸易路线时需求的订单种类" 
-    ov_sheet["B10"] = len(biomeInfo["wantedGoods"]) 
-
-    keys=["trade", "difficulty", "hostility","mapResources","gladesDeposits","gladesSprings","oreDeposits","gladesBuildings","gladesRelics","landPatches","newcomers","seasons"]
-    displayKeys=["前来的商人配置","难度配置","敌意配置","树木配置","空地采集资源配置","空地泉水配置","空地矿石配置","空地装饰建筑配置","空地遗迹建筑配置","空地沃土配置","新村民来源配置","季节效果配置"]
-
-    for i,key in enumerate(keys):
-        row = 11+i
-        ov_sheet["A%d"%row] = displayKeys[i]
-        ov_sheet["B%d"%row] = biomeInfo[key]
-    
-    # 样式
-    for cell in ov_sheet["A"]:
-        cell.font = bold_font
+#def processBiomeModel(workbook:openpyxl.Workbook,biomeName, biomeInfo):
+#    displayName = translateLang(biomeName)
+#    # 概览部分：------------------------------------------------
+#    ov_sheet = workbook.create_sheet(("生态概览_%s"%(displayName))[0:31])
+#    ov_sheet.column_dimensions['A'].width = 20
+#    ov_sheet["A1"] = "地图类型概览 - %s"%displayName
+#    ov_sheet["C1"] = biomeName
+#    ov_sheet["A2"] = "> 基础部分"
+#
+#    ov_sheet["A3"] = "地形视觉样式种类"
+#    ov_sheet["B3"] = len(biomeInfo["maps"])
+#
+#    ov_sheet["A4"] = "允许使用邻近的负面正面修正" 
+#    ov_sheet["B4"] = bool2str(biomeInfo["canHaveModifier"]) 
+#    
+#    ov_sheet["A5"] = "基础奖励倍率" 
+#    ov_sheet["B5"] = biomeInfo["haseBaseReward"] 
+#    ov_sheet["A6"] = "基础周边修正奖励倍率" 
+#    ov_sheet["B6"] = biomeInfo["haseNearbyReward"] 
+#    
+#    ov_sheet["A8"] = "> 具体设定 " 
+#    ov_sheet["A9"] = "这部分会有很多配置名出现 " 
+#
+#    ov_sheet["A10"] = "贸易路线时需求的订单种类" 
+#    ov_sheet["B10"] = len(biomeInfo["wantedGoods"]) 
+#
+#    keys=["trade", "difficulty", "hostility","mapResources","gladesDeposits","gladesSprings","oreDeposits","gladesBuildings","gladesRelics","landPatches","newcomers","seasons"]
+#    displayKeys=["前来的商人配置","难度配置","敌意配置","树木配置","空地采集资源配置","空地泉水配置","空地矿石配置","空地装饰建筑配置","空地遗迹建筑配置","空地沃土配置","新村民来源配置","季节效果配置"]
+#
+#    for i,key in enumerate(keys):
+#        row = 11+i
+#        ov_sheet["A%d"%row] = displayKeys[i]
+#        ov_sheet["B%d"%row] = biomeInfo[key]
+#    
+#    # 样式
+#    for cell in ov_sheet["A"]:
+#        cell.font = bold_font
 
 def _genListName(strings:list):
     common_prefix = ""
@@ -264,7 +269,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
             [
                 programName,
                 displayName,
-                "初始空地",
+                langStr("init_glade"),
                 None,
                 name,
                 None,None,None,None, None,None,None,None, None,None,None,None
@@ -281,7 +286,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                 [
                     programName,
                     displayName,
-                    "主空地",
+                    langStr("main_glade"),
                     i,
                     name,
                     levelInfo["parentOffset"]["x"],
@@ -295,7 +300,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                     levelInfo["angleRange"]["x"],
                     levelInfo["angleRange"]["y"],
                     levelInfo["useInitialAngles"],
-                    "初始空地"
+                    langStr("init_glade")
                 ]
             )
         for i,extraIteration in enumerate(gladeGenInfo["extraIterations"]):
@@ -310,7 +315,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                 [
                     programName,
                     displayName,
-                    "次空地",
+                    langStr("sub_glade"),
                     i,
                     name,
                     levelInfo["parentOffset"]["x"],
@@ -324,7 +329,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                     levelInfo["angleRange"]["x"],
                     levelInfo["angleRange"]["y"],
                     levelInfo["useInitialAngles"],
-                    "主空地%d"%extraIteration["parentLevel"]
+                    langStr("main_glade")+"%d"%extraIteration["parentLevel"]
                 ]
             )
         pc.tick()
@@ -342,7 +347,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
             [
                 programName,
                 displayName,
-                "特殊空地",
+                langStr("sp_glade"),
                 None,
                 name,
                 levelInfo["parentOffset"]["x"],
@@ -356,49 +361,21 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                 levelInfo["angleRange"]["x"],
                 levelInfo["angleRange"]["y"],
                 levelInfo["useInitialAngles"],
-                "初始空地"
+                langStr("init_glade")
             ]
         )
         pc.tick()
     pc.finish()
     
     #表格：展示配置信息
-    ov_sheet = workbook.create_sheet(("地图生成器-基础配置")[0:30])
-    ov_sheet["A1"] = "地图生成配置"
+    ov_sheet = workbook.create_sheet((langStr("map_generator_base_config"))[0:30])
+    ov_sheet["A1"] = langStr("map_generator_base_config_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 240
-    ov_sheet["A2"] = """在你开始游戏时，程序会根据地图生态选取一个<生成配置>，然后根据<生成配置>，抽取一些空地，摆放他们：
-    在<生成配置>中，会有3个<生成阶段>：
-    预热阶段：<特殊空地> 会全部被生成，可以生成多个<特殊空地>的配置
-    第一阶段：<初始空地> 选取1个初始空地
-    第二阶段：<主要空地> 绕着<初始空地>生成一圈普通/危险/受禁空地，
-    第三阶段：<次要空地> 将地图剩下的空隙用其他空地填补满，<次要空地>会绕着<主要空地>生成
-    这个表格只包含地块摆放方式，如果想要它会选取那些地块，可以根据地块列表名去另一个表格查找。
-    <配置程序/翻译名>：这个配置的名称，一般是生态群系，或者特殊修正的名字|<次序>：每个阶段会摆好几圈空地，这个就是顺序
-    <空地抽签组>：一组预先准备好的空地，摆放的空地会从中选取，一共选取<最小空地数量>~<最大空地数量>个
-    <使用初始角度>：我也不知道是啥|<围绕的空地>：围绕哪个空地进行摆放
-    """
-    
-    nameList = [
-        "生成配置程序名",
-        "生成配置翻译名",
-        "生成阶段",
-        "次序",
-        "空地抽签组",
-        "最小距离（相对围绕的空地）",
-        "最大距离（相对围绕的空地）",
-        "x最小额外偏移",
-        "x最大额外偏移",
-        "y最小额外偏移",
-        "y最大额外偏移",
-        "最少空地数量",
-        "最多空地数量",
-        "最小空地间隔角度",
-        "最大空地间隔角度",
-        "使用初始角度？",
-        "围绕的空地",
-    ]
+    ov_sheet["A2"] = langStr("map_generator_base_config_description")
+
+    nameList = langStr("map_generator_base_config_name_list")
     width = [
         5,
         35,
@@ -447,20 +424,14 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
 
 
     #表格：展示配置组
-    ov_sheet = workbook.create_sheet(("地图生成器-抽签空地组")[0:30])
-    ov_sheet["A1"] = "地图生成-用于抽签的一组组空地列表"
+    ov_sheet = workbook.create_sheet(langStr("map_generator_glade_groups")[0:30])
+    ov_sheet["A1"] = langStr("map_generator_glade_groups_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 20
-    ov_sheet["A2"] = """
-    """
+    ov_sheet["A2"] = langStr("map_generator_glade_groups_description")
     
-    nameList = [
-        "抽签空地组",
-        "空地名",
-        "权重",
-        "组内概率"
-    ]
+    nameList = langStr("map_generator_glade_groups_name_list")
     width = [
         25,
         35,
@@ -553,7 +524,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                 rk = res[key]
                 if rk["uniqueImpact"] or uniqueImpact:
                     rk["value"]=value
-                    rk["miss"] = "1/该类型空地数量"
+                    rk["miss"] = langStr("1_div_this_type_glade_count")
                     rk["uniqueImpact"] = True
                     return
                 rk["value"]+=value
@@ -594,12 +565,12 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                     for relicInfo in relicSettings[lv]:
                         chance = relicInfo["groupChance"] * gladeChance
                         if relicInfo["forceUniqueness"]!=0:
-                            addRes(relicInfo["relic"],relicInfo["groupChance"],"遗迹",1,1,0,gladeType,True)
+                            addRes(relicInfo["relic"],relicInfo["groupChance"],langStr("relic"),1,1,0,gladeType,True)
                         else:
                             if relicInfo["groupChance"]>=1:
-                                addRes(relicInfo["relic"],chance,"遗迹",1,1,chance,gladeType)
+                                addRes(relicInfo["relic"],chance,langStr("relic"),1,1,chance,gladeType)
                             else:
-                                addRes(relicInfo["relic"],chance,"遗迹",0,1,chance,gladeType)
+                                addRes(relicInfo["relic"],chance,langStr("relic"),0,1,chance,gladeType)
                 for deposit in gladeInfo["deposits"]:
                     lv = str(deposit["Level"])
                     if lv not in depositSettings:
@@ -611,7 +582,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                                 deposit["AmountRange"]["x"]+
                                 deposit["AmountRange"]["y"]+2
                             ) *0.5 * chance
-                        addRes(depositInfo["deposit"],average,"采集资源",
+                        addRes(depositInfo["deposit"],average,langStr("deposit"),
                                 deposit["AmountRange"]["x"]+1,
                                 deposit["AmountRange"]["y"]+1,
                                 chance,gladeType)
@@ -623,9 +594,9 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                     for buildingInfo in buildingSettings[lv]:
                         chance = buildingInfo["groupChance"] * gladeChance
                         if buildingInfo["groupChance"]>=1:
-                            addRes(buildingInfo["building"],chance,"装饰建筑",1,1,chance,gladeType)
+                            addRes(buildingInfo["building"],chance,langStr("decorative_building"),1,1,chance,gladeType)
                         else:
-                            addRes(buildingInfo["building"],chance,"装饰建筑",0,1,chance,gladeType)
+                            addRes(buildingInfo["building"],chance,langStr("decorative_building"),0,1,chance,gladeType)
                 for ore in gladeInfo["ore"]:
                     lv = ore["Level"]
                     flag=False
@@ -637,7 +608,7 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                                         deposit["AmountRange"]["x"]+
                                         deposit["AmountRange"]["y"]+2
                                     )*0.5
-                                addRes(oreInfo["ore"],average,"矿脉",
+                                addRes(oreInfo["ore"],average,langStr("ore_vein"),
                                         deposit["AmountRange"]["x"]+1,
                                         deposit["AmountRange"]["y"]+1,
                                         chance,gladeType)
@@ -653,24 +624,24 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                     for springInfo in springSettings[lv]:
                         chance = springInfo["groupChance"] * gladeChance
                         if springInfo["groupChance"]>=1:
-                            addRes(springInfo["spring"],chance,"泉水",1,1,chance,gladeType)
+                            addRes(springInfo["spring"],chance,langStr("spring"),1,1,chance,gladeType)
                         else:
-                            addRes(springInfo["spring"],chance,"泉水",0,1,chance,gladeType)
+                            addRes(springInfo["spring"],chance,langStr("spring"),0,1,chance,gladeType)
                 for grass in gladeInfo["landPatches"]:
                     v=grass["size"]["x"]*grass["size"]["y"]
-                    addRes("沃土",gladeChance*v,"沃土",v,v,gladeChance,gladeType)
+                    addRes(langStr("fertile_soil"),gladeChance*v,langStr("fertile_soil"),v,v,gladeChance,gladeType)
             for key,value in res.items():
-                tag="未知"
+                tag=langStr("unknown")
                 if value["missNormal"]<1:
-                    tag = "小地"
+                    tag = langStr("small_glade")
                 elif value["missDangerous"]<1:
-                    tag = "危险地"
+                    tag = langStr("dangerous_glade")
                 elif value["missForbidden"]<1:
-                    tag = "禁地"
+                    tag = langStr("forbidden_glade")
                 elif value["missOrigin"]<1:
-                    tag = "初始地"
+                    tag = langStr("small_glade")
                 elif value["missSeal"]<1:
-                    tag = "封印地"
+                    tag = langStr("seal_glade")
                 dataLists.append(
                     [
                         displayGladeListName,
@@ -683,29 +654,15 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
                         bool2str(value["uniqueImpact"])
                     ]
                 )
-    ov_sheet = workbook.create_sheet(("开空地的平均资源")[0:30])
-    ov_sheet["A1"] = "这个表格可能最有用了"
+    
+    ov_sheet = workbook.create_sheet((langStr("glade_average_resource"))[0:30])
+    ov_sheet["A1"] = langStr("glade_average_resource_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 90
-    ov_sheet["A2"] = """这边模拟了：如果你开一个空地，那么遭遇各种事件，获取各种资源的概率是多少？
-    有的事件是全局唯一的（比如小空地宝鹿和商人事件，非诅咒林的部分闹鬼废墟。考古事件不在此列），
-    他们会在开局时根据概率判定是否在这一局生成，如果生成，倾向于从最远的空地开始生成。
-    小空地唯一事件在单局内100%加入生成，闹鬼建筑和幽灵则不是100%，具体看表格的平均数量，对于唯一建筑，这个表示为单局生成数量期望。
-    另外遭遇概率指的是开这个类型的地遇到这个的概率，你可能遇到不止1个。
-    沃土我没有计算被减去的部分，通常会减少1~2个沃土。
-    """
+    ov_sheet["A2"] = langStr("glade_average_resource_description")
     
-    nameList = [
-        "抽签空地组",
-        "生物群系",
-        "资源种类",
-        "资源名称",
-        "平均资源",
-        "遭遇概率",
-        "空地类型",
-        "全局唯一生成"
-    ]
+    nameList = langStr("glade_average_resource_name_list")
     width = [
         25,
         20,
@@ -732,17 +689,17 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
     for i in range(4,frow+1):
         typeName = ov_sheet["C%d"%i].value
         vRange=(0,1)
-        if typeName=="遗迹":
+        if typeName==langStr("relic"):
             vRange=(0,1)
-        elif typeName=="采集资源":
+        elif typeName==langStr("deposit"):
             vRange=(0,3.0)
-        elif typeName=="装饰建筑":
+        elif typeName==langStr("decorative_building"):
             vRange=(0,1.0)
-        elif typeName=="矿脉":
+        elif typeName==langStr("ore_vein"):
             vRange=(0,2.7)
-        elif typeName=="泉水":
+        elif typeName==langStr("spring"):
             vRange=(0,1.0)
-        elif typeName=="沃土":
+        elif typeName==langStr("fertile_soil"):
             vRange=(0,25)
         
         intep = max(0,min(1,(ov_sheet["E%d"%i].value-vRange[0])/vRange[1]))
@@ -761,123 +718,123 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
     addEnumColor(ov_sheet,'D4:D%d'%frow)
     addEnumColor(ov_sheet,'G4:G%d'%frow)
 
-def processGenGladeModel(workbook:openpyxl.Workbook, gladeGenName, gladeGen):
-    displayName = translateLang(gladeGenName)
-
-
-    # glade部分：---------------------------------------------
-    ov_sheet = workbook.create_sheet(("空地生成规则_%s"%displayName)[0:30])
-    ov_sheet.column_dimensions['A'].width = 25
-    ov_sheet.column_dimensions['B'].width = 45
-    ov_sheet.column_dimensions['D'].width = 45
-    ov_sheet.column_dimensions['F'].width = 45
-    ov_sheet.column_dimensions['H'].width = 45
-    ov_sheet["A1"] = "地图生成-%s"%displayName
-    ov_sheet["C1"] = gladeGenName
-    ov_sheet["A2"] = "过程：先选一个<初始空地>生成，然后摆几圈<主要空地>，之后在<主要空地>周边添上<次要空地>，用于填补缝隙"
-    ov_sheet["A3"] = "每次生成时，会在每一组选取若干个空地生成。具体的空地内容请查看另一个表格。生成时是顺(逆?)时针摆放空地，并且摆放时会有位置上的微小偏移"
-
-    ov_sheet["A5"] = "初始空地列表"
-    
-    row = 6
-    for i,v in enumerate(gladeGen["initialGlades"]):
-        ov_sheet["B%d"%row]=translateLang(v)
-        row+=1
-
-    row+=1#gap
-    ov_sheet["A%d"%row] = "<主要空地>列表"
-    row+=1
-    ov_sheet["A%d"%row] = ""
-    ov_sheet["A%d"%(row+1)] = "到初始空地距离范围"
-    ov_sheet["A%d"%(row+2)] = "x偏移范围"
-    ov_sheet["A%d"%(row+3)] = "y偏移范围"
-    ov_sheet["A%d"%(row+4)] = "空地间隔角度偏移范围"
-    ov_sheet["A%d"%(row+5)] = "空地数量范围"
-    
-    startRow=row+7
-    startCol = 2
-    maxRow=0
-    
-    for i,level in enumerate(gladeGen["levels"]):
-        curColName = get_column_letter(startCol+i*2)
-        curCol2Name = get_column_letter(startCol+i*2+1)
-        ov_sheet[getIndexWithCol(curColName,row+0)] = "主要空地组%d"%i
-        ov_sheet[getIndexWithCol(curColName,row+1)] = level["parentOffset"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+1)] = level["parentOffset"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+2)] = level["randomXDeviation"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+2)] = level["randomXDeviation"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+3)] = level["randomYDeviation"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+3)] = level["randomYDeviation"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+4)] = level["angleRange"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+4)] = level["angleRange"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+5)] = level["amount"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+5)] = level["amount"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+6)] = "空地名"
-        ov_sheet[getIndexWithCol(curCol2Name,row+6)] = "权重"
-        for j,gladeInfo in enumerate(level["glades"]):
-            ov_sheet[getIndexWithCol(curColName,startRow+j)] = translateLang(gladeInfo["glade"])
-            ov_sheet[getIndexWithCol(curCol2Name,startRow+j)] = gladeInfo["weight"]
-        maxRow=max(maxRow,startRow+len(level["glades"]))
-    for cell in ov_sheet[row+6]:
-        cell.font = bold_font
-    for cell in ov_sheet[row+0]:
-        cell.font = bold_font
-
-    row = maxRow+2
-    ov_sheet["A%d"%row] = "<次要空地>列表"
-    row+=1
-    ov_sheet["A%d"%row] = ""
-    ov_sheet["A%d"%(row+1)] = "到初始空地距离范围"
-    ov_sheet["A%d"%(row+2)] = "x偏移范围"
-    ov_sheet["A%d"%(row+3)] = "y偏移范围"
-    ov_sheet["A%d"%(row+4)] = "空地间隔角度偏移范围"
-    ov_sheet["A%d"%(row+5)] = "空地数量范围"
-    ov_sheet["A%d"%(row+6)] = "围绕哪个组别的主空地"
-
-    startRow=row+8
-    startCol = 2
-    
-    for i,levelBase in enumerate(gladeGen["extraIterations"]):
-        level = levelBase["iteration"]
-        curColName = get_column_letter(startCol+i*2)
-        curCol2Name = get_column_letter(startCol+i*2+1)
-        ov_sheet[getIndexWithCol(curColName,row+0)] = "次要空地组%d"%i
-        ov_sheet[getIndexWithCol(curColName,row+1)] = level["parentOffset"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+1)] = level["parentOffset"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+2)] = level["randomXDeviation"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+2)] = level["randomXDeviation"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+3)] = level["randomYDeviation"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+3)] = level["randomYDeviation"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+4)] = level["angleRange"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+4)] = level["angleRange"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+5)] = level["amount"]["x"]
-        ov_sheet[getIndexWithCol(curCol2Name,row+5)] = level["amount"]["y"]
-        ov_sheet[getIndexWithCol(curColName,row+6)] = "主要空地组%d"%levelBase["parentLevel"]
-        ov_sheet[getIndexWithCol(curColName,row+7)] = "空地名"
-        ov_sheet[getIndexWithCol(curCol2Name,row+7)] = "权重"
-        for j,gladeInfo in enumerate(level["glades"]):
-            ov_sheet[getIndexWithCol(curColName,startRow+j)] = translateLang(gladeInfo["glade"])
-            ov_sheet[getIndexWithCol(curCol2Name,startRow+j)] = gladeInfo["weight"]
-        maxRow=max(maxRow,startRow+len(level["glades"]))
-    for cell in ov_sheet[row+7]:
-        cell.font = bold_font
-    for cell in ov_sheet[row+0]:
-        cell.font = bold_font
-    # 样式
-    for cell in ov_sheet["A"]:
-        cell.font = bold_font
-    pass
+#def processGenGladeModel(workbook:openpyxl.Workbook, gladeGenName, gladeGen):
+#    displayName = translateLang(gladeGenName)
+#
+#
+#    # glade部分：---------------------------------------------
+#    ov_sheet = workbook.create_sheet(("空地生成规则_%s"%displayName)[0:30])
+#    ov_sheet.column_dimensions['A'].width = 25
+#    ov_sheet.column_dimensions['B'].width = 45
+#    ov_sheet.column_dimensions['D'].width = 45
+#    ov_sheet.column_dimensions['F'].width = 45
+#    ov_sheet.column_dimensions['H'].width = 45
+#    ov_sheet["A1"] = "地图生成-%s"%displayName
+#    ov_sheet["C1"] = gladeGenName
+#    ov_sheet["A2"] = "过程：先选一个<初始空地>生成，然后摆几圈<主要空地>，之后在<主要空地>周边添上<次要空地>，用于填补缝隙"
+#    ov_sheet["A3"] = "每次生成时，会在每一组选取若干个空地生成。具体的空地内容请查看另一个表格。生成时是顺(逆?)时针摆放空地，并且摆放时会有位置上的微小偏移"
+#
+#    ov_sheet["A5"] = "初始空地列表"
+#    
+#    row = 6
+#    for i,v in enumerate(gladeGen["initialGlades"]):
+#        ov_sheet["B%d"%row]=translateLang(v)
+#        row+=1
+#
+#    row+=1#gap
+#    ov_sheet["A%d"%row] = "<主要空地>列表"
+#    row+=1
+#    ov_sheet["A%d"%row] = ""
+#    ov_sheet["A%d"%(row+1)] = "到初始空地距离范围"
+#    ov_sheet["A%d"%(row+2)] = "x偏移范围"
+#    ov_sheet["A%d"%(row+3)] = "y偏移范围"
+#    ov_sheet["A%d"%(row+4)] = "空地间隔角度偏移范围"
+#    ov_sheet["A%d"%(row+5)] = "空地数量范围"
+#    
+#    startRow=row+7
+#    startCol = 2
+#    maxRow=0
+#    
+#    for i,level in enumerate(gladeGen["levels"]):
+#        curColName = get_column_letter(startCol+i*2)
+#        curCol2Name = get_column_letter(startCol+i*2+1)
+#        ov_sheet[getIndexWithCol(curColName,row+0)] = "主要空地组%d"%i
+#        ov_sheet[getIndexWithCol(curColName,row+1)] = level["parentOffset"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+1)] = level["parentOffset"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+2)] = level["randomXDeviation"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+2)] = level["randomXDeviation"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+3)] = level["randomYDeviation"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+3)] = level["randomYDeviation"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+4)] = level["angleRange"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+4)] = level["angleRange"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+5)] = level["amount"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+5)] = level["amount"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+6)] = "空地名"
+#        ov_sheet[getIndexWithCol(curCol2Name,row+6)] = "权重"
+#        for j,gladeInfo in enumerate(level["glades"]):
+#            ov_sheet[getIndexWithCol(curColName,startRow+j)] = translateLang(gladeInfo["glade"])
+#            ov_sheet[getIndexWithCol(curCol2Name,startRow+j)] = gladeInfo["weight"]
+#        maxRow=max(maxRow,startRow+len(level["glades"]))
+#    for cell in ov_sheet[row+6]:
+#        cell.font = bold_font
+#    for cell in ov_sheet[row+0]:
+#        cell.font = bold_font
+#
+#    row = maxRow+2
+#    ov_sheet["A%d"%row] = "<次要空地>列表"
+#    row+=1
+#    ov_sheet["A%d"%row] = ""
+#    ov_sheet["A%d"%(row+1)] = "到初始空地距离范围"
+#    ov_sheet["A%d"%(row+2)] = "x偏移范围"
+#    ov_sheet["A%d"%(row+3)] = "y偏移范围"
+#    ov_sheet["A%d"%(row+4)] = "空地间隔角度偏移范围"
+#    ov_sheet["A%d"%(row+5)] = "空地数量范围"
+#    ov_sheet["A%d"%(row+6)] = "围绕哪个组别的主空地"
+#
+#    startRow=row+8
+#    startCol = 2
+#    
+#    for i,levelBase in enumerate(gladeGen["extraIterations"]):
+#        level = levelBase["iteration"]
+#        curColName = get_column_letter(startCol+i*2)
+#        curCol2Name = get_column_letter(startCol+i*2+1)
+#        ov_sheet[getIndexWithCol(curColName,row+0)] = "次要空地组%d"%i
+#        ov_sheet[getIndexWithCol(curColName,row+1)] = level["parentOffset"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+1)] = level["parentOffset"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+2)] = level["randomXDeviation"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+2)] = level["randomXDeviation"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+3)] = level["randomYDeviation"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+3)] = level["randomYDeviation"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+4)] = level["angleRange"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+4)] = level["angleRange"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+5)] = level["amount"]["x"]
+#        ov_sheet[getIndexWithCol(curCol2Name,row+5)] = level["amount"]["y"]
+#        ov_sheet[getIndexWithCol(curColName,row+6)] = "主要空地组%d"%levelBase["parentLevel"]
+#        ov_sheet[getIndexWithCol(curColName,row+7)] = "空地名"
+#        ov_sheet[getIndexWithCol(curCol2Name,row+7)] = "权重"
+#        for j,gladeInfo in enumerate(level["glades"]):
+#            ov_sheet[getIndexWithCol(curColName,startRow+j)] = translateLang(gladeInfo["glade"])
+#            ov_sheet[getIndexWithCol(curCol2Name,startRow+j)] = gladeInfo["weight"]
+#        maxRow=max(maxRow,startRow+len(level["glades"]))
+#    for cell in ov_sheet[row+7]:
+#        cell.font = bold_font
+#    for cell in ov_sheet[row+0]:
+#        cell.font = bold_font
+#    # 样式
+#    for cell in ov_sheet["A"]:
+#        cell.font = bold_font
+#    pass
 
 def _gladeType(glade):
     info = ""
     if glade["as_init_glade"]>0:
-        info+="初-"
+        info+=langStr("simple_init")+"-"
     if glade["as_main_glade"]>0:
-        info+="主-"
+        info+=langStr("simple_main")+"-"
     if glade["as_sub_glade"]>0:
-        info+="次-"
+        info+=langStr("simple_sub")+"-"
     if glade["as_sp_glade"]>0:
-        info+="特殊-"
+        info+=langStr("simple_sp")+"-"
     return info[:-1]
 
 def _gladeGrassCount(glade):
@@ -886,7 +843,7 @@ def _gladeGrassCount(glade):
         count += landPatch["size"]["x"]*landPatch["size"]["y"]
     return count
 
-def _minMaxGladeDeposite(glade):
+def _minMaxGladedeposit(glade):
     countMin=0
     countMax=0
     for deposit in glade["deposits"]:
@@ -894,7 +851,7 @@ def _minMaxGladeDeposite(glade):
         countMax += deposit["AmountRange"]["y"]+1
     return countMin,countMax
 
-def _minMaxOreDeposite(glade):
+def _minMaxOredeposit(glade):
     countMin=0
     countMax=0
     for ore in glade["ore"]:
@@ -903,29 +860,29 @@ def _minMaxOreDeposite(glade):
     return countMin,countMax
 
 def __genGladeGroupKey(k):
-    if "遗迹" in k:
+    if langStr("relic") in k:
         return 0
-    if "资源" in k:
+    if langStr("deposit") in k:
         return 1
-    if "建筑" in k:
+    if langStr("decorative_building") in k:
         return 2
-    if "矿石" in k:
+    if langStr("ore_vein") in k:
         return 3
-    if "泉水" in k:
+    if langStr("spring") in k:
         return 4
     return 5
 def _genGladeGroup(glade):
     result = []
     for relic in glade["relics"]:
-        result.append("遗迹组%d"%relic["Level"])
+        result.append(langStr("relic")+langStr("group")+"%d"%relic["Level"])
     for deposit in glade["deposits"]:
-        result.append("资源组%d"%deposit["Level"])
+        result.append(langStr("deposit")+langStr("group")+"%d"%deposit["Level"])
     for build in glade["buildings"]:
-        result.append("建筑组%d"%build["Level"])
+        result.append(langStr("decorative_building")+langStr("group")+"%d"%build["Level"])
     for ore in glade["ore"]:
-        result.append("矿石组%d"%ore["Level"])
+        result.append(langStr("ore_vein")+langStr("group")+"%d"%ore["Level"])
     for spring in glade["springs"]:
-        result.append("泉水组%d"%spring["Level"])
+        result.append(langStr("spring")+langStr("group")+"%d"%spring["Level"])
     counter = Counter(result)
     result_list = [f"{count}×{item}" if count > 1 else item for item, count in counter.items()]
     result_list.sort(key=__genGladeGroupKey)
@@ -935,7 +892,7 @@ def _genGladeDetailInfo(glade):
     result=[]
     for relic in glade["relics"]:
         result.append(
-            "遗迹组%d(%d,%d>%d°)"%(
+            langStr("relic")+langStr("group")+"%d(%d,%d>%d°)"%(
                 relic["Level"],
                 relic["Field"]["x"],relic["Field"]["y"],
                 relic["Rotation"] if "Rotation" in relic else 0
@@ -943,7 +900,7 @@ def _genGladeDetailInfo(glade):
             )
     for deposit in glade["deposits"]:
         result.append(
-            "资源组%d(%d,%d,[%d,%d])"%(
+            langStr("deposit")+langStr("group")+"%d(%d,%d,[%d,%d])"%(
                 deposit["Level"],
                 deposit["Field"]["x"],deposit["Field"]["y"],
                 deposit["AmountRange"]["x"],deposit["AmountRange"]["y"]
@@ -951,7 +908,7 @@ def _genGladeDetailInfo(glade):
             )
     for build in glade["buildings"]:
         result.append(
-            "建筑组%d(%d,%d>%d°)"%(
+            langStr("decorative_building")+langStr("group")+"%d(%d,%d>%d°)"%(
                 build["Level"],
                 build["Field"]["x"],build["Field"]["y"],
                 build["Rotation"] if "Rotation" in build else 0
@@ -959,7 +916,7 @@ def _genGladeDetailInfo(glade):
             )
     for ore in glade["ore"]:
         result.append(
-            "资源组%d(%d,%d,[%d,%d])"%(
+            langStr("deposit")+langStr("group")+"%d(%d,%d,[%d,%d])"%(
                 ore["Level"],
                 ore["Field"]["x"],ore["Field"]["y"],
                 ore["AmountRange"]["x"],ore["AmountRange"]["y"]
@@ -967,26 +924,26 @@ def _genGladeDetailInfo(glade):
             )
     for spring in glade["springs"]:
         result.append(
-            "泉水组%d(%d,%d)"%(
+            langStr("spring")+langStr("group")+"%d(%d,%d)"%(
                 spring["Level"],
                 spring["Field"]["x"],spring["Field"]["y"]
                 )
             )
     for grass in glade["landPatches"]:
         result.append(
-            "沃土组(%d,%d,[%d,%d])"%(
+            langStr("fertile_soil")+langStr("group")+"(%d,%d,[%d,%d])"%(
                 grass["Field"]["x"],grass["Field"]["y"],
                 grass["size"]["x"],grass["size"]["y"]
                 )
             )
     if "isOrigin" in glade and glade["isOrigin"]:
-        result.append("是初始")
-    if "Field" in glade["origin"]:
-        result.append("初始点(%d,%d)"%(glade["origin"]["Field"]["x"],glade["origin"]["Field"]["y"]))
+        result.append(langStr("is_original_point"))
+        if "Field" in glade["origin"]:
+            result.append(langStr("original_point")+"(%d,%d)"%(glade["origin"]["Field"]["x"],glade["origin"]["Field"]["y"]))
     if "hearth" in glade and glade["hearth"] is not None:
-        result.append("有主火塘")
+        result.append(langStr("has_main_hearth"))
     if "storage" in glade and glade["storage"] is not None:
-        result.append("有主仓库")
+        result.append(langStr("has_main_stroage"))
     return result
 
 def _getGroupHintWords(types,index):
@@ -999,15 +956,15 @@ def _genGladeTranslateIndexGroup(group_list):
     results=[]
     for v in group_list:
         dic = None
-        if "遗迹" in v:
+        if langStr("relic") in v:
             dic = group_hint_words["relics"]
-        elif "资源" in v:
+        elif langStr("deposit") in v:
             dic = group_hint_words["deposits"]
-        elif "建筑" in v:
+        elif langStr("decorative_building") in v:
             dic = group_hint_words["buildings"]
-        elif "矿石" in v:
+        elif langStr("ore_vein") in v:
             dic = group_hint_words["ores"]
-        elif "泉水" in v:
+        elif langStr("spring") in v:
             dic = group_hint_words["springs"]
         else:
             continue
@@ -1036,39 +993,14 @@ def _addTitleBar(nameList,width,worksheet,startCol=1,startRow=1):
         worksheet.column_dimensions[get_column_letter(i+1)].width = width[i]
 
 def processGlade(workbook:openpyxl.Workbook, glades):
-    ov_sheet = workbook.create_sheet(("空地模板")[0:30])
-    ov_sheet["A1"] = "空地模板"
+    ov_sheet = workbook.create_sheet(langStr("glade_template")[0:30])
+    ov_sheet["A1"] = langStr("glade_template_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 100
-    ov_sheet["A2"] = """所有空地生成都是基于这些模板，表格只展示重要部分。
-    这些模板决定了这个空地有哪些类型的资源，摆放在哪里，数量为多少，以及摆放哪些生成组。
-    生成组会决定资源的类型，会从一组候选选择中抽取一个决定，生成组在不同生物群系的地图下会有所不同。
-    空地类别：影响生成方式，一般靠近古老火塘的为主空地，主空地外围为次要空地。
-    累计xx资源：在生成1个资源点后，周边追加[min,max]个资源点，我们统计累计数值
-    生成候选组：这里会告知这个空地能会摆放哪些组别的资源节点，箱子，事件建筑，废墟等等...
-    候选组具体内容：xx组编号(坐标x,坐标y>旋转标识°,[最小额外值或沃土长，最大额外值或沃土宽])
-    """
+    ov_sheet["A2"] = langStr("glade_template_description")
     
-    nameList = [
-        "空地程序名",
-        "空地翻译名",
-        "长度",
-        "宽度",
-        "类别",
-        "总权重",
-        "空地泉水资源数量",
-        "沃土候选生成数量",
-        "资源点集群数",
-        "采集资源最大累计数量",
-        "采集资源最小累计数量",
-        "矿石最大累计数量",
-        "矿石最小累计数量",
-        "装饰建筑数量",
-        "遗迹建筑数量",
-        "生成候选组（候选组的内容查看其他表格）",
-        "候选组具体内容"
-    ]
+    nameList = langStr("glade_template_name_list")
     width = [
         5,
         25,
@@ -1093,8 +1025,8 @@ def processGlade(workbook:openpyxl.Workbook, glades):
     dataLists = []
     pc = ProgressCounter("Glade",len(gladesGenGather))
     for gladeName, glade in glades.items():
-        minDeposit, maxDeposit = _minMaxGladeDeposite(glade)
-        minOre, maxOre = _minMaxOreDeposite(glade)
+        minDeposit, maxDeposit = _minMaxGladedeposit(glade)
+        minOre, maxOre = _minMaxOredeposit(glade)
         groups = _genGladeGroup(glade)
         groupTranslate = _genGladeTranslateIndexGroup(groups)
         data = [
@@ -1143,29 +1075,14 @@ def processGlade(workbook:openpyxl.Workbook, glades):
     #addEnumColor(ov_sheet,'E4:E%d'%frow)
     #addEnumColor(ov_sheet,'P4:P%d'%frow)
     # 其他表格：遗迹组 
-    ov_sheet = workbook.create_sheet(("遗迹组")[0:30])
-    ov_sheet["A1"] = "遗迹建筑模板 - 箱子/危险受禁事件建筑/废墟建筑"
+    ov_sheet = workbook.create_sheet(langStr("relic_group_sheet")[0:30])
+    ov_sheet["A1"] = langStr("relic_group_sheet_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 120
-    ov_sheet["A2"] = """2×遗迹组10 表示这个glade会生成2个遗迹，遗迹的类型通过抽签决定，会在相应<生态环境配置>的<组别10>中加权抽签
-抽取的概率由权重决定。
-被标识为全局唯一的建筑，一场游戏内最多生成1次。
-全局生成概率为0~1，如果判定没有成功生成，那么整局游戏内你都不会看到这个建筑。如果判定成功，那么它必定最先出现在最后放置的空地上。
-        """
+    ov_sheet["A2"] = langStr("relic_group_sheet_description")
     
-    nameList = [
-        "配置程序名",
-        "配置翻译名",
-        "组别编号",
-        "组别名称",
-        "全局唯一",
-        "全局生成概率",
-        "权重",
-        "组内概率",
-        "建筑名称翻译",
-        "建筑名称",
-    ]
+    nameList = langStr("relic_group_sheet_name_list")
     width = [
         5,
         25,
@@ -1224,27 +1141,14 @@ def processGlade(workbook:openpyxl.Workbook, glades):
 
 
     # 其他表格：资源采集组 
-    ov_sheet = workbook.create_sheet(("资源采集组")[0:30])
-    ov_sheet["A1"] = "可采集资源点模板"
+    ov_sheet = workbook.create_sheet(langStr("deposit_group_sheet")[0:30])
+    ov_sheet["A1"] = langStr("deposit_group_sheet_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """2×资源组10 表示这个空地会生成2个资源节点，资源节点的类型通过抽签决定，会在相应<生态环境配置>的<组别10>中加权抽签
-抽取的概率由权重决定。
-决定资源节点类型后，还会在这个资源节点旁边生成若干个相同的资源节点，比如小资源点通常会额外生成3个左右。
-这个额外资源节点数量由空地模板决定（也就是空地模板里的累计最大最小资源节点数量）
-        """
+    ov_sheet["A2"] = langStr("deposit_group_sheet_description")
     
-    nameList = [
-        "配置程序名",
-        "配置翻译名",
-        "组别编号",
-        "组别名称",
-        "权重",
-        "组内概率",
-        "节点名称翻译",
-        "节点名称",
-    ]
+    nameList = langStr("deposit_group_sheet_name_list")
     width = [
         5,
         25,
@@ -1292,26 +1196,14 @@ def processGlade(workbook:openpyxl.Workbook, glades):
     addEnumColor(ov_sheet,'B4:B%d'%frow)
     
     # 其他表格：遗迹建筑组
-    ov_sheet = workbook.create_sheet(("建筑组")[0:30])
-    ov_sheet["A1"] = "建筑组模板"
+    ov_sheet = workbook.create_sheet(langStr("building_group_sheet")[0:30])
+    ov_sheet["A1"] = langStr("building_group_sheet_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """2×建筑组10 表示这个空地会生成2个建筑，建筑的类型通过抽签决定，会在相应<生态环境配置>的<组别10>中加权抽签
-抽取的概率由权重决定。
-需要村民处理事件的建筑属于<遗迹组>。这里的建筑组开地即用。
-        """
+    ov_sheet["A2"] = langStr("building_group_sheet_description")
     
-    nameList = [
-        "配置程序名",
-        "配置翻译名",
-        "组别编号",
-        "组别名称",
-        "权重",
-        "组内概率",
-        "节点名称翻译",
-        "节点名称",
-    ]
+    nameList = langStr("building_group_sheet_name_list")
     width = [
         5,
         25,
@@ -1360,26 +1252,14 @@ def processGlade(workbook:openpyxl.Workbook, glades):
     
 
     # 其他表格：矿石组
-    ov_sheet = workbook.create_sheet(("矿石组")[0:30])
-    ov_sheet["A1"] = "矿石组模板"
+    ov_sheet = workbook.create_sheet(langStr("ore_group_sheet")[0:30])
+    ov_sheet["A1"] = langStr("ore_group_sheet_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """2×矿石组1 表示这个空地会生成2个矿脉，矿脉的类型通过抽签决定，会在相应<生态环境配置>的<组别10>中加权抽签
-抽取的概率由权重决定。
-生成时，会先生成中心位置的矿物资源点，然后周围按照额外矿脉的配置，增加矿脉资源点
-        """
+    ov_sheet["A2"] = langStr("ore_group_sheet_description")
     
-    nameList = [
-        "配置程序名",
-        "配置翻译名",
-        "组别编号",
-        "组别名称",
-        "权重",
-        "组内概率",
-        "节点名称翻译",
-        "节点名称",
-    ]
+    nameList = langStr("ore_group_sheet_name_list")
     width = [
         5,
         25,
@@ -1430,25 +1310,14 @@ def processGlade(workbook:openpyxl.Workbook, glades):
     addEnumColor(ov_sheet,'B4:B%d'%frow)
 
     # 其他表格：泉水组
-    ov_sheet = workbook.create_sheet(("泉水组")[0:30])
-    ov_sheet["A1"] = "泉水组模板"
+    ov_sheet = workbook.create_sheet(langStr("spring_group_sheet")[0:30])
+    ov_sheet["A1"] = langStr("spring_group_sheet_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """泉水组1 表示这个空地会生成1个泉水，泉水的类型通过抽签决定，会在相应<生态环境配置>的<组别10>中加权抽签
-抽取的概率由权重决定。
-        """
+    ov_sheet["A2"] = langStr("spring_group_sheet_description")
     
-    nameList = [
-        "配置程序名",
-        "配置翻译名",
-        "组别编号",
-        "组别名称",
-        "权重",
-        "组内概率",
-        "节点名称翻译",
-        "节点名称",
-    ]
+    nameList = langStr("spring_group_sheet_name_list")
     width = [
         5,
         25,
@@ -1506,91 +1375,91 @@ def processGlade(workbook:openpyxl.Workbook, glades):
 
 
 
-def GenEventSheet(workbook:openpyxl.Workbook):
-
-    # relic events
-    dataLists = []
-    for relicAssetName, relicInfo in relicsGather.items():
-
-        dataLists.append(
-            [
-                relicAssetName,
-                translateLang(relicAssetName),
-            ]
-        )
-        pass
-
-    ov_sheet = workbook.create_sheet(("处理空地事件")[0:30])
-    ov_sheet["A1"] = "所有森林空地事件"
-    ov_sheet.merge_cells('A2:P2')
-    ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
-    ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """
-        """
-    
-    nameList = [
-        "程序名称",
-        "翻译名称",
-        "描述",
-        "处理人数",
-        "难度环境",
-        "抉择名称",
-        "抉择类型",
-        "抉择奖励",
-        "工作时间",
-        "需求物品组",
-        "处理时承受的效果"
-    ]
-    width = [
-        5,
-    ]
-    _addTitleBar(nameList,width,ov_sheet,1,3)
-    _addDataToWorkSheet(dataLists,ov_sheet,1,4)
-
-    for cell in ov_sheet[1]:
-        cell.font = bold_font
-    for cell in ov_sheet[3]:
-        cell.font = bold_font
-    #for cell in ov_sheet["F"]:
-    #    cell.number_format = "0.00%"
-    #frow = ov_sheet.max_row
-    #ov_sheet.conditional_formatting.add('E4:E%d'%frow, color_compare_rule)
-    #addEnumColor(ov_sheet,'C4:C%d'%frow)
-        
-    # ............................................
-    ov_sheet = workbook.create_sheet(("过期空地事件")[0:30])
-    ov_sheet["A1"] = "所有森林空地事件"
-    ov_sheet.merge_cells('A2:P2')
-    ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
-    ov_sheet.row_dimensions[2].height = 70
-    ov_sheet["A2"] = """
-        """
-    
-    nameList = [
-        "程序名称",
-        "翻译名称",
-        "宽x",
-        "长y"
-        "过期时间（从发现开始计算）",
-        "永久效果",
-        "出现时效果",
-        "过期效果"
-    ]
-    width = [
-        5,
-    ]
-    _addTitleBar(nameList,width,ov_sheet,1,3)
-    _addDataToWorkSheet(dataLists,ov_sheet,1,4)
-
-    for cell in ov_sheet[1]:
-        cell.font = bold_font
-    for cell in ov_sheet[3]:
-        cell.font = bold_font
-    #for cell in ov_sheet["F"]:
-    #    cell.number_format = "0.00%"
-    #frow = ov_sheet.max_row
-    #ov_sheet.conditional_formatting.add('E4:E%d'%frow, color_compare_rule)
-    #addEnumColor(ov_sheet,'C4:C%d'%frow)
+#def GenEventSheet(workbook:openpyxl.Workbook):
+#
+#    # relic events
+#    dataLists = []
+#    for relicAssetName, relicInfo in relicsGather.items():
+#
+#        dataLists.append(
+#            [
+#                relicAssetName,
+#                translateLang(relicAssetName),
+#            ]
+#        )
+#        pass
+#
+#    ov_sheet = workbook.create_sheet(("处理空地事件")[0:30])
+#    ov_sheet["A1"] = "所有森林空地事件"
+#    ov_sheet.merge_cells('A2:P2')
+#    ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+#    ov_sheet.row_dimensions[2].height = 70
+#    ov_sheet["A2"] = """
+#        """
+#    
+#    nameList = [
+#        "程序名称",
+#        "翻译名称",
+#        "描述",
+#        "处理人数",
+#        "难度环境",
+#        "抉择名称",
+#        "抉择类型",
+#        "抉择奖励",
+#        "工作时间",
+#        "需求物品组",
+#        "处理时承受的效果"
+#    ]
+#    width = [
+#        5,
+#    ]
+#    _addTitleBar(nameList,width,ov_sheet,1,3)
+#    _addDataToWorkSheet(dataLists,ov_sheet,1,4)
+#
+#    for cell in ov_sheet[1]:
+#        cell.font = bold_font
+#    for cell in ov_sheet[3]:
+#        cell.font = bold_font
+#    #for cell in ov_sheet["F"]:
+#    #    cell.number_format = "0.00%"
+#    #frow = ov_sheet.max_row
+#    #ov_sheet.conditional_formatting.add('E4:E%d'%frow, color_compare_rule)
+#    #addEnumColor(ov_sheet,'C4:C%d'%frow)
+#        
+#    # ............................................
+#    ov_sheet = workbook.create_sheet(("过期空地事件")[0:30])
+#    ov_sheet["A1"] = "所有森林空地事件"
+#    ov_sheet.merge_cells('A2:P2')
+#    ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+#    ov_sheet.row_dimensions[2].height = 70
+#    ov_sheet["A2"] = """
+#        """
+#    
+#    nameList = [
+#        "程序名称",
+#        "翻译名称",
+#        "宽x",
+#        "长y"
+#        "过期时间（从发现开始计算）",
+#        "永久效果",
+#        "出现时效果",
+#        "过期效果"
+#    ]
+#    width = [
+#        5,
+#    ]
+#    _addTitleBar(nameList,width,ov_sheet,1,3)
+#    _addDataToWorkSheet(dataLists,ov_sheet,1,4)
+#
+#    for cell in ov_sheet[1]:
+#        cell.font = bold_font
+#    for cell in ov_sheet[3]:
+#        cell.font = bold_font
+#    #for cell in ov_sheet["F"]:
+#    #    cell.number_format = "0.00%"
+#    #frow = ov_sheet.max_row
+#    #ov_sheet.conditional_formatting.add('E4:E%d'%frow, color_compare_rule)
+#    #addEnumColor(ov_sheet,'C4:C%d'%frow)
 
 def tryAdd(asset, key,postProcess= lambda x:x,defaultValue=None):
         if key in asset:
@@ -1631,7 +1500,7 @@ def GenGoodSheet(workbook:openpyxl.Workbook):
         pc.tick()
         pass
     pc.finish()
-
+    # TODO: replace it with language keys
     ov_sheet = workbook.create_sheet(("物品")[0:30])
     ov_sheet["A1"] = "物品"
     ov_sheet.merge_cells('A2:P2')
@@ -2098,7 +1967,7 @@ def GenBlueprintSheet(workbook:openpyxl.Workbook):
         for blueprintGroup in blueprintConfig["blueprints"]:
             basedata2 = [x for x in basedata]
             basedata2+=[
-                "基础池",
+                langStr("blueprint_base_pool"),
                 blueprintGroup["range"]["x"],
                 blueprintGroup["range"]["y"],
             ]
@@ -2116,7 +1985,7 @@ def GenBlueprintSheet(workbook:openpyxl.Workbook):
         if wildCardGroup is not None:
             data = [x for x in basedata]
             data+=[
-                "野池",
+                langStr("blueprint_wild_pool"),
                 None,
                 None,
                 None,
@@ -2127,35 +1996,14 @@ def GenBlueprintSheet(workbook:openpyxl.Workbook):
         pc.tick()
     pc.finish()
 
-    ov_sheet = workbook.create_sheet(("蓝图总配置")[0:30])
-    ov_sheet["A1"] = "蓝图配置组 - 组别配置信息"
+    ov_sheet = workbook.create_sheet(langStr("blueprint_pool_config")[0:30])
+    ov_sheet["A1"] = langStr("blueprint_pool_config_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 120
-    ov_sheet["A2"] = """这里是配置组，每场游戏开始时，会使用其中一个配置作为蓝图生成
-所有常规游戏使用[默认]配置，威望难度则会使用[进阶]配置，沿海林地比较特殊，拥有单独的配置
-<声望值范围> 声望值将决定从哪些[基础池]中选出本次使用的蓝图池，每一组声望配置提供一组候选蓝图池
-<蓝图池名称> 决定池子后，使者会从这个池子中抽取蓝图作为最终的候选蓝图
-<蓝图池类型> 分为[基础池]和[野池]，基础池最多提供2个蓝图选项，剩下的则由[野池]提供
-<最低野卡组抽取数> 最终蓝图选项奖励中，至少有多少个选项来自[野池]
-        """
+    ov_sheet["A2"] = langStr("blueprint_pool_config_description")
     
-    nameList = [
-        "程序名称（Unity Prefab名称）",
-        "蓝图总配置名称",
-        "重复蓝图",
-        "最低野池抽取数",
-        "重选花费",
-        "花费增长",
-
-        "蓝图池类型",
-        "声望值范围",
-        "",
-        "权重",
-        "组内概率",
-        "蓝图池名称"
-
-    ]
+    nameList = langStr("blueprint_pool_config_name_list")
     width = [
         5,
         30,
@@ -2200,7 +2048,7 @@ def GenBlueprintSheet(workbook:openpyxl.Workbook):
         basedata=[
             blueprintGen["m_Name"],
             translateLang(blueprintGen["m_Name"]),
-            "野池" if "isWild" in blueprintGen else "基础池"
+            langStr("blueprint_wild_pool") if "isWild" in blueprintGen else langStr("blueprint_base_pool")
         ]
         for building in blueprintGen["buildings"]:
             data = [x for x in basedata]
@@ -2212,24 +2060,14 @@ def GenBlueprintSheet(workbook:openpyxl.Workbook):
             dataLists.append(data)
 
 
-    ov_sheet = workbook.create_sheet(("蓝图池")[0:30])
-    ov_sheet["A1"] = "蓝图池"
+    ov_sheet = workbook.create_sheet(langStr("blueprint_pool_detail")[0:30])
+    ov_sheet["A1"] = langStr("blueprint_pool_detail_short_info")
     ov_sheet.merge_cells('A2:P2')
     ov_sheet["A2"].alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
     ov_sheet.row_dimensions[2].height = 93
-    ov_sheet["A2"] = """这里描述了每个蓝图池里有什么
-注意每个蓝图池内部的蓝图都有权重
-        """
+    ov_sheet["A2"] = langStr("blueprint_pool_detail_description")
     
-    nameList = [
-        "程序名称（Unity Prefab名称）",
-        "蓝图池名称",
-        "蓝图池类型",
-        "权重",
-        "组内概率",
-        "建筑蓝图名称"
-
-    ]
+    nameList = langStr("blueprint_pool_detail_name_list")
     width = [
         5,
         30,
@@ -2282,6 +2120,7 @@ class ProgressCounter:
         print("\nFinish %s!"%self.name)
 
 def GenEffectsSheet(workbook:openpyxl.Workbook):
+    #TODO: support localization
     dataLists=[]
     pc = ProgressCounter("Effect",len(effectsGather))
     removeAssetSuffixFunc = partial(arrayToTextProcessed,lambda x: x.replace(".asset",""))
@@ -2632,7 +2471,7 @@ def GenEffectsSheet(workbook:openpyxl.Workbook):
 #-------------------------------------------------------------------------------------------
 
 buildingsGenGather = loadJson("output/buildings_gen.json")
-depositsGather = loadJson("output/deposites_gen.json")
+depositsGather = loadJson("output/deposits_gen.json")
 gladesGather = loadJson("output/glades.json")
 gladesGenGather = loadJson("output/glades_gen_model.json")
 relicGenGather = loadJson("output/relics_gen.json")
@@ -2808,25 +2647,25 @@ for typeName,listInfo in springsGenGather.items():
 # main part
 
 def buildExcelGlades():
-    wb = openpyxl.load_workbook("template_glades.xlsx")
+    wb = openpyxl.load_workbook(os.path.join("settings",utils.getLangCode(),"template_glades.xlsx"))
     processGenGladeModelIntegrate(wb,gladesGenGather,spGladeGenGather)
     processGlade(wb,gladesGather)
-    wb.save("vis_output/空地模板.xlsx")
+    wb.save("vis_output/Glades.xlsx")
 
 def buildExcelGoods():
-    wb = openpyxl.load_workbook("template_good.xlsx")
+    wb = openpyxl.load_workbook(os.path.join("settings",utils.getLangCode(),"template_goods.xlsx"))
     GenGoodSheet(wb)
-    wb.save("vis_output/物品配方与建筑.xlsx")
+    wb.save("vis_output/Goods_Buildings.xlsx")
 
 def buildExcelBlueprint():
-    wb = openpyxl.load_workbook("template_blueprint.xlsx")
+    wb = openpyxl.load_workbook(os.path.join("settings",utils.getLangCode(),"template_blueprints.xlsx"))
     GenBlueprintSheet(wb)
-    wb.save("vis_output/蓝图机制详解.xlsx")
+    wb.save("vis_output/Blueprints.xlsx")
 
 def buildEffects():
-    wb = openpyxl.load_workbook("template_effects.xlsx")
+    wb = openpyxl.load_workbook(os.path.join("settings",utils.getLangCode(),"template_effects.xlsx"))
     GenEffectsSheet(wb)
-    wb.save("vis_output/基石与效果.xlsx")
+    wb.save("vis_output/Effects.xlsx")
     pass
 buildExcelGlades()
 buildExcelGoods()

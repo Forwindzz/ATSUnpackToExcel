@@ -17,12 +17,12 @@ def search_displayName_in_file(file_path):
                     return line.strip()[5:]
     return None
 
-targetLanguagePath = "./all_2/ExportedProject/Assets/Resources/texts/zh-CN.json"
+targetLanguagePath = "./all_2/ExportedProject/Assets/Resources/texts/%s.json"%utils.getLangCode()
 languageMapping = {}
 extraMapping = {}
 with open(targetLanguagePath, 'r',encoding="utf-8") as f:
     languageMapping = json.load(f)
-with open("add_translate.json", 'r',encoding="utf-8") as f:
+with open(os.path.join("settings",utils.getLangCode(),"add_translate.json") , 'r',encoding="utf-8") as f:
     extraMapping = json.load(f)
 
 for k,v in extraMapping.items():

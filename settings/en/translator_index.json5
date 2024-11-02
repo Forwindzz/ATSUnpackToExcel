@@ -1,0 +1,78 @@
+{
+    "relics":{
+        "1":"TutorE",
+        "2":"DangerE",
+        "3":"ForbiddenE",
+        "4":"Mole", //这个不太明白，好像有点生物主题的危害？
+        "5":"ForbiddenIndustry", //感觉像是金属主题的配置？
+        "10":"SmallE",
+        "11":"Drill",
+        "20":"MLCache&Survivals",//应该是给大空地用的？
+        "21":"MLCache",
+        "30":"LCache",
+        "44":"Soothsayer",//没有任何空地用到...
+        "100":"AllRuins", //包括闹鬼，注意闹鬼在不同生态群系概率不一样，这边着重注意一下，需要继续对比
+        "122":"FoodRuins",
+        "132":"LightIndustryRuins",
+        "133":"HeavyIndustryRuins",
+        "143":"InstitutionRuins",
+        "144":"InitInstitutionRuins",
+        "666":"AngerGhost",
+        "667":"CalmGhost",
+        "999":"Archeological", //诅咒林和皇林也有考古...?
+        "1022":"FramRuins",//好像只有危险和受禁才能开？
+        "2022":"HerbalistsCamp",
+        "3022":"TrapperCamp",
+        "4022":"ForagerCamp",
+        "5022":"BrickOven",//只在教程里出现
+        "5023":"AdvanceRainCollector",
+        "6022":"FishHut",
+        "10022":"TinyStorage"
+    },
+    "deposits":{
+        "0":"InitSmallMatDeposit",//但是沼泽有个蛇窝...
+        "1":"SmallFoodDeposit",
+        "2":"TutorSmallMatDeposit",//教程专用
+        "10":"SmallDeposit",
+        "11":"SmallHerbMushroomDeposit",
+        "12":"SmallCarnivorousDeposit",
+        "13":"SmallInsectEggDeposit",
+        "14":"SmallGrainVegeRootFoodDeposit",
+        "20":"BigDeposit(Most)",
+        "21":"BigMushroomBerryHerbDeposit",
+        "22":"BigCarnivorousDeposit",
+        "23":"BigInsectEggDeposit",
+        "24":"BigGrainVegeRootFoodDeposit",
+        "30":"TutorDeposit", //教程专用,
+        "50":"SmallFishPool",
+        "51":"BigFishPool",
+        "99":"HugeDeposit",
+        //教程专用
+        "999":"Tutor2Deposit" 
+    },
+    "buildings":{
+        "0":"Inscribed Monolith",
+        "1":"NormalRoad",
+        "4":"StoneRoad",
+        "8":"Farmland", //没有使用
+        "10":"WoodcutterCamp",
+        "20":"Fence",
+        "21":"ComfortBuilding",
+        "666":"SealOrTool"
+    },
+    "ores":{
+        "0":"Ore",
+        "1":"OreMix",
+        "2":"OreMoreMetal",
+        "3":"OreMoreCoal"
+    },
+    "springs":{
+        "0":"Spring",
+        "1":"MoreDrizzleSpring",
+        "2":"AllAverageSpring",
+        "3":"MoreClearanceStormSpring",
+        "11":"StormSpring",
+        "12":"ClearanceSpring",
+        "13":"DrizzleSpring",
+    }
+}
