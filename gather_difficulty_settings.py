@@ -21,5 +21,5 @@ integrateSearchUseScriptUUID(difficultiesScriptUUID,gatherDifficultyInfo)
 
 processedGather = globalGather
 
-with open("output/difficulties.json","w",encoding="utf-8") as f:
+with open("output/difficulties_settings.json","w",encoding="utf-8") as f:
     json.dump(processedGather,f,indent=4)

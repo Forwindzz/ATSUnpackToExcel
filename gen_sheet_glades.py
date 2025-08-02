@@ -204,11 +204,13 @@ def _genListName(strings:list):
             common_prefix = s
             common_suffix = s
         else:
-            for i in range(len(common_prefix)-1,-1,-1):
+            slen = min(len(common_prefix),len(s))-1
+            for i in range(slen,-1,-1):
                 if common_prefix[i]!=s[i]:
                     common_prefix = common_prefix[:i]
                     break
-            for j in range(len(common_suffix)-1,-1,-1):
+            slen = min(len(common_suffix),len(s))-1
+            for j in range(slen,-1,-1):
                 if common_suffix[-j]!=s[-j]:
                     common_suffix = common_suffix[-j:]
     breakI = None
@@ -475,13 +477,13 @@ def processGenGladeModelIntegrate(workbook:openpyxl.Workbook,gladesGenGather,spG
             continue
         difficultyName = biomeInfo["difficulty"]
         targetGenerationName=None
-        for diff in difficultiesGather[difficultyName]:
+        for diff in difficultySettingGather[difficultyName]:
             if diff["difficulty"] == "23 Ascension XX.asset":
                 targetGenerationName = diff["generation"]
                 break
         if targetGenerationName is None:
             print("Cannot find <23 Ascension XX> for %s > %s, use last difficulty instead"%(biomeName,difficultyName))
-            targetGenerationName = difficultiesGather[difficultyName][-1]["generation"]
+            targetGenerationName = difficultySettingGather[difficultyName][-1]["generation"]
         if targetGenerationName not in gladeGenToBiome:
             gladeGenToBiome[targetGenerationName]=[]
         gladeGenToBiome[targetGenerationName].append(biomeName)
@@ -1474,6 +1476,8 @@ def filterNoneToStr(obj):
 
 def GenGoodSheet(workbook:openpyxl.Workbook):
     # goods
+    # 解包有问题，暂时跳过
+    return
     dataLists = []
     amberPrice = goodsGather["_Valuable_ Amber.asset"]["tradingSellValue"]
     pc = ProgressCounter("Goods",len(buildingsGather))
@@ -1590,7 +1594,7 @@ def GenGoodSheet(workbook:openpyxl.Workbook):
         elif s=="Grade3.asset":
             return 3
         else:
-            return int(s.replace("Grade","").replace(".asset",""))
+            return int(s.replace("Grade","").replace(".asset","").replace("-institution",""))
         
 
     def mapGradeStr(lv:int):
@@ -2176,7 +2180,7 @@ def GenEffectsSheet(workbook:openpyxl.Workbook):
         data.append(tryAdd(effect,"drawLimit", lambda x: None if x==0 else x))
         data.append(tryAdd(effect,"blockedBy",partial(arrayToTextProcessed,lambda x: translateLang(x.replace(".asset","")).replace(".asset",""))))
         data.append(tryAdd(effect,"dlc",bool2str))
-        data.append(tryAdd(effect,"label",lambda x:x.replace(".asset","")))
+        data.append(tryAdd(effect,"label",lambda x:"" if x is None else x.replace(".asset","")))
         data.append(tryAdd(effect,"usabilityTags",arrayToTranslationText))
         data.append(tryAdd(effect,"m_Script"))
         dataLists.append(data)
@@ -2480,7 +2484,7 @@ oresGenGather = loadJson("output/ores_gen.json")
 springsGenGather = loadJson("output/springs_gen.json")
 spGladeGenGather = loadJson("output/glades_sp_group.json")
 displayNamesGather = loadJson("output/display_names.json")
-difficultiesGather = loadJson("output/difficulties.json")
+difficultySettingGather = loadJson("output/difficulties_settings.json")
 relicsGather = loadJson("output/relics.json")
 effectsGather = loadJson("output/effects.json")
 effectsTablesGather = loadJson("output/effects_table.json")

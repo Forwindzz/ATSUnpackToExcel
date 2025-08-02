@@ -6,6 +6,7 @@ python gather_relic_gen.py
 python gather_glades.py
 python gather_deposits_gen.py
 python gather_building_gen.py
+python gather_order_config.py
 python gather_springs.py
 python gather_difficulty_settings.py
 python gather_building_gen.py

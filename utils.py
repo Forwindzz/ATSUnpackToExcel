@@ -54,12 +54,19 @@ def recursiveRemoveFileID0(obj):
     else:
         return obj
 
+def _safeGetUUIDMapping(key,uuidMapping):
+    if key in uuidMapping:
+        return uuidMapping[key]
+    else:
+        print("Warn: Cannot find uuid for "+key)
+        return key
+
 def recursiveRemoveUUID(obj,uuidMapping):
     if isinstance(obj,dict):
         result={}
         for k,v in obj.items():
             if isinstance(v,dict) and "guid" in v:
-                result[k] = uuidMapping[v["guid"]]
+                result[k] = _safeGetUUIDMapping(v["guid"],uuidMapping)
             else:
                 result[k] = recursiveRemoveUUID(v,uuidMapping)
         return result
@@ -67,7 +74,7 @@ def recursiveRemoveUUID(obj,uuidMapping):
         result=[]
         for v in obj:
             if isinstance(v,dict) and "guid" in v:
-                result.append(uuidMapping[v["guid"]])
+                result.append(_safeGetUUIDMapping(v["guid"],uuidMapping))
             else:
                 result.append(recursiveRemoveUUID(v,uuidMapping))
         return result
